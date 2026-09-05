@@ -58,6 +58,8 @@ mutual-fund-ratings/
 ├── style.css         # Design system tokens, typography, and responsive media queries
 ├── .github/workflows/daily-top-funds.yml # Daily release publishing workflow
 ├── .github/scripts/update-top-funds.py   # MFAPI fetch and rating generator
+├── .github/instructions/fund-lens.instructions.md # Frontend editing instructions
+├── .github/skills/create-view/SKILL.md   # New tabbed view workflow
 ├── README.md         # Project documentation & usage guide
 └── AGENTS.md         # Instructions and conventions for AI agents & contributors
 ```
