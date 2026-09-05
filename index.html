@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Fund Lens | Performance Ratings</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="https://cdn.sheetjs.com/xlsx-0.20.3/package/dist/xlsx.full.min.js"></script>
+</head>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Performance review</p>
+        <h1>Fund Lens</h1>
+        <p class="hero-copy">Compare mutual funds using a clear, consistent rating built from their historical returns.</p>
+      </div>
+      <div class="formula" aria-label="Rating formula">
+        <span>Rating model</span>
+        <strong>20% 1Y · 30% 3Y · 50% 5Y</strong>
+      </div>
+    </header>
+
+    <section id="input-screen" class="input-screen" aria-labelledby="data-heading">
+      <div>
+        <div class="data-heading-row">
+          <p class="section-kicker">Your data</p>
+          <label class="upload-button" for="fund-file" title="Upload a previously downloaded Excel file">&#8679; Upload</label>
+          <input id="fund-file" type="file" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet">
+        </div>
+        <h2 id="data-heading">Add funds to analyze</h2>
+        <p class="muted">Add one Indian mutual-fund name in each field. Fund Lens uses live NAV history to calculate the rating.</p>
+      </div>
+      <div class="input-options">
+        <div class="input-option live-option">
+          <div>
+            <h3>Fund names</h3>
+            <p class="muted">Each fund will be searched and analyzed separately.</p>
+          </div>
+          <div id="fund-name-fields" class="fund-name-fields">
+            <label class="fund-name-field">
+              <span class="sr-only">Fund name 1</span>
+              <input class="fund-name-input" type="text" placeholder="e.g. Parag Parikh Flexi Cap Fund" autocomplete="off">
+            </label>
+          </div>
+          <button id="add-fund-button" class="add-fund-button" type="button" aria-label="Add another fund name">+</button>
+          <button id="fetch-funds-button" class="primary-button" type="button">Fetch actual NAV data</button>
+        </div>
+      </div>
+      <p id="file-status" class="status" role="status"></p>
+      <p id="error-message" class="error-message" role="alert" hidden></p>
+    </section>
+
+    <section id="results-screen" hidden>
+      <button id="back-button" class="back-button" type="button">← Back to data input</button>
+      <section class="summary-grid" aria-label="Portfolio summary">
+      <div class="summary-card"><span>Funds reviewed</span><strong id="fund-count">0</strong></div>
+      <div class="summary-card"><span>Top rated</span><strong id="top-rated">—</strong></div>
+      <div class="summary-card"><span>Average 5Y return</span><strong id="average-return">—</strong></div>
+      </section>
+
+      <section class="results-section" aria-labelledby="results-heading">
+      <div class="section-heading">
+        <div>
+          <p class="section-kicker">Relative view</p>
+          <h2 id="results-heading">Performance ratings</h2>
+        </div>
+        <label class="search-control" for="fund-filter">
+          <span>Filter funds</span>
+          <input id="fund-filter" type="search" placeholder="Search by name or category">
+        </label>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">Fund</th>
+              <th scope="col">Rating</th>
+              <th scope="col">1Y return</th>
+              <th scope="col">3Y return</th>
+              <th scope="col">5Y return</th>
+              <th scope="col">Weighted score</th>
+            </tr>
+          </thead>
+          <tbody id="fund-table-body"></tbody>
+        </table>
+        <p id="empty-state" class="empty-state" hidden>No funds match this filter.</p>
+      </div>
+      </section>
+
+      <button id="download-button" class="download-button" type="button">Download Excel</button>
+
+      <footer class="disclaimer">
+      Live results use scheme names and historical NAV data from MFAPI, which sources Indian mutual-fund data. Uploaded results use the data in your previously downloaded workbook. Past performance does not guarantee future results. This tool is for research, not financial advice.
+      </footer>
+    </section>
+  </main>
+  <button id="go-to-inputs-button" class="go-to-inputs-button" type="button" hidden>Go to inputs</button>
+  <script src="script.js"></script>
+</body>
+</html>
