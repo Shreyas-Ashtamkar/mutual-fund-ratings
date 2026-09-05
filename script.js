@@ -3,7 +3,7 @@ const MFAPI_BASE = 'https://api.mfapi.in/mf';
 
 const TOP_FUNDS = [
   { category: 'Flexi Cap', name: 'Parag Parikh Flexi Cap Fund Direct Growth', thesis: 'Diversified equity allocation with an established long-term record.', horizon: '5+ years' },
-  { category: 'Large & Mid Cap', name: 'Kotak Equity Opportunities Fund Direct Growth', thesis: 'Blends mature large companies with measured mid-cap exposure.', horizon: '5+ years' },
+  { category: 'International', name: 'Kotak Quality Overseas Equity Active FOF Direct Growth', schemeCode: '154287', thesis: 'International equity fund-of-funds exposure for a diversified satellite allocation.', horizon: '7+ years' },
   { category: 'Mid Cap', name: 'HDFC Mid-Cap Opportunities Fund Direct Growth', thesis: 'Higher-growth equity exposure for investors who can tolerate volatility.', horizon: '7+ years' },
   { category: 'Small Cap', name: 'Nippon India Small Cap Fund Direct Growth', thesis: 'High-risk satellite allocation focused on smaller Indian companies.', horizon: '7+ years' },
   { category: 'ELSS', name: 'Mirae Asset ELSS Tax Saver Fund Direct Growth', thesis: 'Equity-linked tax saver with the statutory three-year lock-in.', horizon: '3+ years' },
