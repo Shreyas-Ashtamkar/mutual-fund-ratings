@@ -1,7 +1,18 @@
 const WEIGHTS = { oneYear: 0.2, threeYear: 0.3, fiveYear: 0.5 };
 const MFAPI_BASE = 'https://api.mfapi.in/mf';
 
+const TOP_FUNDS = [
+  { category: 'Flexi Cap', name: 'Parag Parikh Flexi Cap Fund Direct Growth', thesis: 'Diversified equity allocation with an established long-term record.', horizon: '5+ years' },
+  { category: 'Large & Mid Cap', name: 'Kotak Equity Opportunities Fund Direct Growth', thesis: 'Blends mature large companies with measured mid-cap exposure.', horizon: '5+ years' },
+  { category: 'Mid Cap', name: 'HDFC Mid-Cap Opportunities Fund Direct Growth', thesis: 'Higher-growth equity exposure for investors who can tolerate volatility.', horizon: '7+ years' },
+  { category: 'Small Cap', name: 'Nippon India Small Cap Fund Direct Growth', thesis: 'High-risk satellite allocation focused on smaller Indian companies.', horizon: '7+ years' },
+  { category: 'ELSS', name: 'Mirae Asset ELSS Tax Saver Fund Direct Growth', thesis: 'Equity-linked tax saver with the statutory three-year lock-in.', horizon: '3+ years' },
+  { category: 'Hybrid', name: 'ICICI Prudential Equity & Debt Fund Direct Growth', thesis: 'Equity and debt mix for a smoother path than pure equity.', horizon: '5+ years' },
+  { category: 'Index', name: 'UTI Nifty 50 Index Fund Direct Growth', thesis: 'Low-cost access to India’s large-cap benchmark.', horizon: '5+ years' },
+];
+
 let funds = [];
+let selectedCategory = 'All';
 
 const tableBody = document.getElementById('fund-table-body');
 const emptyState = document.getElementById('empty-state');
@@ -17,6 +28,10 @@ const backButton = document.getElementById('back-button');
 const goToInputsButton = document.getElementById('go-to-inputs-button');
 const status = document.getElementById('file-status');
 const errorMessage = document.getElementById('error-message');
+const viewTabs = [...document.querySelectorAll('.view-tab')];
+const appViews = [...document.querySelectorAll('.app-view')];
+const categoryFilters = document.getElementById('category-filters');
+const topFundsGrid = document.getElementById('top-funds-grid');
 
 function parseNumber(value) {
   const number = Number.parseFloat(String(value).replace('%', '').trim());
@@ -68,6 +83,7 @@ function render() {
       <td>${formatReturn(fund.threeYear)}</td>
       <td>${formatReturn(fund.fiveYear)}</td>
       <td class="score">${formatReturn(score)}</td>
+      <td><a class="chart-button" href="${chartUrl(fund)}" target="_blank" rel="noopener" aria-label="Open NAV chart for ${escapeHtml(fund.name)}" title="Open NAV chart in a new tab"><i class="fa-solid fa-chart-line" aria-hidden="true"></i></a></td>
     </tr>`;
   });
 
@@ -80,6 +96,35 @@ function render() {
   document.getElementById('average-return').textContent = fiveYearFunds.length
     ? formatReturn(fiveYearFunds.reduce((sum, fund) => sum + fund.fiveYear, 0) / fiveYearFunds.length)
     : '—';
+}
+
+function chartUrl(fund) {
+  const params = new URLSearchParams({ name: fund.name });
+  if (fund.schemeCode) params.set('code', fund.schemeCode);
+  return `chart.html?${params}`;
+}
+
+function renderTopFunds() {
+  const categories = ['All', ...new Set(TOP_FUNDS.map((fund) => fund.category))];
+  categoryFilters.innerHTML = categories.map((category) => `<button class="category-filter${category === selectedCategory ? ' is-selected' : ''}" type="button" role="tab" aria-selected="${category === selectedCategory}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('');
+  const visibleFunds = selectedCategory === 'All' ? TOP_FUNDS : TOP_FUNDS.filter((fund) => fund.category === selectedCategory);
+  topFundsGrid.innerHTML = visibleFunds.map((fund) => `<article class="top-fund-card">
+    <div class="top-fund-card-head"><span class="fund-category-pill">${escapeHtml(fund.category)}</span><span class="horizon"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${fund.horizon}</span></div>
+    <h3>${escapeHtml(fund.name)}</h3>
+    <p>${escapeHtml(fund.thesis)}</p>
+    <a class="open-chart-link" href="${chartUrl(fund)}" target="_blank" rel="noopener">Open NAV chart <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
+  </article>`).join('');
+}
+
+function setView(viewId) {
+  appViews.forEach((view) => { view.hidden = view.id !== viewId; });
+  viewTabs.forEach((tab) => {
+    const active = tab.dataset.view === viewId;
+    tab.classList.toggle('is-active', active);
+    tab.setAttribute('aria-selected', String(active));
+  });
+  if (viewId === 'top-funds-view') renderTopFunds();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 function escapeHtml(value) {
@@ -289,3 +334,13 @@ backButton.addEventListener('click', showInputs);
 goToInputsButton.addEventListener('click', showInputs);
 
 filterInput.addEventListener('input', render);
+
+viewTabs.forEach((tab) => tab.addEventListener('click', () => setView(tab.dataset.view)));
+categoryFilters.addEventListener('click', (event) => {
+  const filter = event.target.closest('.category-filter');
+  if (!filter) return;
+  selectedCategory = filter.dataset.category;
+  renderTopFunds();
+});
+
+renderTopFunds();

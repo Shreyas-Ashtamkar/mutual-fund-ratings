@@ -21,7 +21,7 @@ body {
   font-family: Georgia, "Times New Roman", serif;
 }
 
-.page-shell { max-width: 1180px; margin: 0 auto; padding: 48px 24px; }
+.page-shell { max-width: 1180px; margin: 0 auto; padding: 40px 24px 56px; }
 
 .hero { display: flex; align-items: flex-end; justify-content: space-between; gap: 32px; margin-bottom: 34px; }
 .eyebrow, .section-kicker { margin: 0 0 8px; color: var(--accent); font: 700 0.72rem/1.2 Arial, sans-serif; letter-spacing: 0.12em; text-transform: uppercase; }
@@ -32,6 +32,11 @@ h2 { margin: 0; font-size: 1.4rem; font-weight: 500; }
 .formula span, .formula strong { display: block; }
 .formula span { margin-bottom: 7px; color: var(--muted); font: 0.7rem Arial, sans-serif; text-transform: uppercase; letter-spacing: 0.08em; }
 .formula strong { font-size: 0.95rem; font-weight: 500; }
+.view-tabs { display: flex; width: fit-content; margin: 0 0 18px; padding: 4px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.view-tab { display: inline-flex; align-items: center; gap: 8px; padding: 9px 13px; border-radius: 5px; background: transparent; color: var(--muted); }
+.view-tab.is-active { background: var(--accent); color: #fff; }
+.view-tab:hover, .view-tab:focus-visible { color: var(--accent); }
+.view-tab.is-active:hover, .view-tab.is-active:focus-visible { color: #fff; background: #19513d; }
 
 .input-screen, .results-section { background: var(--surface); border: 1px solid var(--line); border-radius: var(--radius); }
 .input-screen { display: grid; gap: 24px; padding: 24px; }
@@ -86,17 +91,50 @@ tbody tr:last-child td { border-bottom: 0; }
 .category { display: block; margin-top: 4px; color: var(--muted); font-size: 0.72rem; }
 .rating { color: var(--warm); font-size: 1.05rem; letter-spacing: 0.06em; }
 .score { color: var(--accent); font-weight: 700; }
+.chart-button { display: inline-grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 6px; color: var(--accent); text-decoration: none; }
+.chart-button:hover, .chart-button:focus-visible { border-color: var(--accent); background: var(--accent-soft); }
 .empty-state { padding: 28px 24px; margin: 0; color: var(--muted); font: 0.85rem Arial, sans-serif; }
 .disclaimer { max-width: 850px; margin: 18px 2px 0; }
+.top-funds-header { display: flex; justify-content: space-between; align-items: flex-end; gap: 28px; margin: 4px 0 22px; }
+.top-funds-header h2 { font-size: clamp(1.8rem, 4vw, 2.6rem); }
+.method-note { max-width: 290px; margin: 0; padding: 13px 15px; border-left: 3px solid var(--warm); background: var(--surface); color: var(--muted); font: 0.78rem/1.5 Arial, sans-serif; }
+.method-note i { color: var(--accent); margin-right: 4px; }
+.category-filters { display: flex; gap: 8px; overflow-x: auto; margin: 0 -2px 18px; padding: 2px 2px 7px; scrollbar-width: thin; }
+.category-filter { flex: 0 0 auto; padding: 8px 12px; border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--muted); }
+.category-filter.is-selected, .category-filter:hover, .category-filter:focus-visible { border-color: var(--accent); background: var(--accent-soft); color: var(--accent); }
+.top-funds-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 14px; }
+.top-fund-card { display: flex; flex-direction: column; min-height: 220px; padding: 18px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); }
+.top-fund-card-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.fund-category-pill { color: var(--accent); font: 700 0.68rem Arial, sans-serif; letter-spacing: 0.07em; text-transform: uppercase; }
+.horizon { flex: 0 0 auto; color: var(--muted); font: 0.7rem Arial, sans-serif; }
+.top-fund-card h3 { margin: 18px 0 8px; font-size: 1.05rem; line-height: 1.25; font-weight: 500; }
+.top-fund-card p { margin: 0; color: var(--muted); font: 0.82rem/1.5 Arial, sans-serif; }
+.open-chart-link { display: inline-flex; align-items: center; gap: 7px; margin-top: auto; padding-top: 18px; color: var(--accent); font: 700 0.76rem Arial, sans-serif; text-decoration: none; }
+.open-chart-link:hover, .open-chart-link:focus-visible { color: #19513d; text-decoration: underline; }
 
 @media (max-width: 700px) {
-  .page-shell { padding: 30px 16px; }
+  .page-shell { padding: 24px 14px 76px; }
   .go-to-inputs-button { right: 16px; bottom: 16px; }
-  .hero, .section-heading { align-items: flex-start; flex-direction: column; }
+  .hero { gap: 20px; margin-bottom: 24px; }
+  h1 { font-size: 3.2rem; }
+  .hero, .section-heading, .top-funds-header { align-items: flex-start; flex-direction: column; }
   .formula { width: 100%; }
+  .view-tabs { width: 100%; }
+  .view-tab { flex: 1; justify-content: center; padding: 10px 7px; font-size: 0.71rem; }
+  .input-screen { padding: 18px; }
+  .data-heading-row { justify-content: space-between; }
+  .input-option { padding: 16px; }
   .input-option .primary-button { width: 100%; text-align: center; }
-  .summary-card { padding: 15px; }
+  .summary-grid { gap: 8px; }
+  .summary-card { min-width: 0; padding: 13px 10px; }
+  .summary-card span { font-size: 0.62rem; }
   .summary-card strong { font-size: 1.35rem; }
   .search-control, .search-control input { width: 100%; }
+  .results-section { padding-top: 18px; }
+  .section-heading { gap: 14px; padding: 0 18px 16px; }
+  th, td { padding: 14px 16px; }
+  .top-funds-grid { grid-template-columns: 1fr; }
+  .top-fund-card { min-height: 190px; }
+  .method-note { max-width: none; width: 100%; }
 }
 
