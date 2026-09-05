@@ -87,8 +87,9 @@ th, td { padding: 16px 24px; border-bottom: 1px solid var(--line); text-align: l
 th { color: var(--muted); font-size: 0.7rem; letter-spacing: 0.07em; text-transform: uppercase; }
 td { font-size: 0.86rem; }
 tbody tr:last-child td { border-bottom: 0; }
-.fund-name { font-family: Georgia, "Times New Roman", serif; font-size: 0.98rem; font-weight: 700; }
-.category { display: block; margin-top: 4px; color: var(--muted); font-size: 0.72rem; }
+td:first-child { min-width: 260px; white-space: normal; }
+.fund-name { display: block; overflow-wrap: anywhere; font-family: Georgia, "Times New Roman", serif; font-size: 0.98rem; font-weight: 700; }
+.category { display: block; margin-top: 4px; overflow-wrap: anywhere; color: var(--muted); font-size: 0.72rem; }
 .rating { color: var(--warm); font-size: 1.05rem; letter-spacing: 0.06em; }
 .score { color: var(--accent); font-weight: 700; }
 .chart-button { display: inline-grid; width: 34px; height: 34px; place-items: center; border: 1px solid var(--line); border-radius: 6px; color: var(--accent); text-decoration: none; }
