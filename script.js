@@ -1,10 +1,11 @@
 const WEIGHTS = { oneYear: 0.2, threeYear: 0.3, fiveYear: 0.5 };
 const MFAPI_BASE = 'https://api.mfapi.in/mf';
+const TOP_FUNDS_DATA_URL = 'https://github.com/Shreyas-Ashtamkar/mutual-fund-ratings/releases/download/daily-top-funds/top-funds.json';
 
 const TOP_FUNDS = [
   { category: 'Flexi Cap', name: 'Parag Parikh Flexi Cap Fund Direct Growth', thesis: 'Diversified equity allocation with an established long-term record.', horizon: '5+ years' },
   { category: 'International', name: 'Kotak Quality Overseas Equity Active FOF Direct Growth', schemeCode: '154287', thesis: 'International equity fund-of-funds exposure for a diversified satellite allocation.', horizon: '7+ years' },
-  { category: 'Mid Cap', name: 'HDFC Mid-Cap Opportunities Fund Direct Growth', thesis: 'Higher-growth equity exposure for investors who can tolerate volatility.', horizon: '7+ years' },
+  { category: 'Mid Cap', name: 'HDFC Mid-Cap Opportunities Fund Direct Growth', schemeCode: '118989', thesis: 'Higher-growth equity exposure for investors who can tolerate volatility.', horizon: '7+ years' },
   { category: 'Small Cap', name: 'Nippon India Small Cap Fund Direct Growth', thesis: 'High-risk satellite allocation focused on smaller Indian companies.', horizon: '7+ years' },
   { category: 'ELSS', name: 'Mirae Asset ELSS Tax Saver Fund Direct Growth', thesis: 'Equity-linked tax saver with the statutory three-year lock-in.', horizon: '3+ years' },
   { category: 'Hybrid', name: 'ICICI Prudential Equity & Debt Fund Direct Growth', thesis: 'Equity and debt mix for a smoother path than pure equity.', horizon: '5+ years' },
@@ -13,8 +14,13 @@ const TOP_FUNDS = [
 
 let funds = [];
 let selectedCategory = 'All';
+const TOP_FUNDS_CACHE_KEY = 'fund-lens-top-funds-v1';
+const TOP_FUNDS_CACHE_TTL = 24 * 60 * 60 * 1000;
+let topFundMetrics = {};
+let topFundsUpdatedAt = 0;
 
 const tableBody = document.getElementById('fund-table-body');
+const fundCardsFeed = document.getElementById('fund-cards-feed');
 const emptyState = document.getElementById('empty-state');
 const filterInput = document.getElementById('fund-filter');
 const fundNameFields = document.getElementById('fund-name-fields');
@@ -32,6 +38,7 @@ const viewTabs = [...document.querySelectorAll('.view-tab')];
 const appViews = [...document.querySelectorAll('.app-view')];
 const categoryFilters = document.getElementById('category-filters');
 const topFundsGrid = document.getElementById('top-funds-grid');
+const topFundsRefreshStatus = document.getElementById('top-funds-refresh-status');
 
 function parseNumber(value) {
   const number = Number.parseFloat(String(value).replace('%', '').trim());
@@ -72,6 +79,13 @@ function render() {
   const visibleFunds = funds.filter((fund) => `${fund.name} ${fund.category}`.toLowerCase().includes(query));
   const scoredFunds = funds.map((fund) => ({ ...fund, score: calculateScore(fund) }));
   const scores = scoredFunds.map((fund) => fund.score).filter(Number.isFinite);
+
+  const renderPill = (val) => {
+    if (!Number.isFinite(val)) return '<span class="metric-val neutral">—</span>';
+    const isPos = val >= 0;
+    return `<span class="metric-val ${isPos ? 'positive' : 'negative'}">${isPos ? '+' : ''}${val.toFixed(1)}%</span>`;
+  };
+
   const rows = visibleFunds.map((fund) => {
     const score = calculateScore(fund);
     const rating = Number.isFinite(score) ? ratingFor(score, scores) : 0;
@@ -87,7 +101,53 @@ function render() {
     </tr>`;
   });
 
+  const cards = visibleFunds.map((fund) => {
+    const score = calculateScore(fund);
+    const rating = Number.isFinite(score) ? ratingFor(score, scores) : 0;
+    const stars = '★'.repeat(rating) + '☆'.repeat(5 - rating);
+    return `<article class="fund-card">
+      <div class="fund-card-header">
+        <div class="fund-badge-group">
+          <span class="fund-category-tag">${escapeHtml(fund.category || 'Mutual Fund')}</span>
+          ${fund.schemeCode ? `<span class="fund-code-pill">Code ${escapeHtml(String(fund.schemeCode))}</span>` : ''}
+        </div>
+        <div class="fund-card-rating" aria-label="${rating ? `${rating} out of 5 stars` : 'Not enough history for a rating'}">
+          <span class="rating-stars">${rating ? stars : '—'}</span>
+          ${rating ? `<span class="rating-badge">${rating}/5</span>` : ''}
+        </div>
+      </div>
+      <h3 class="fund-card-title">${escapeHtml(fund.name)}</h3>
+      <div class="fund-metrics-grid">
+        <div class="fund-metric-item">
+          <span class="metric-lbl">1Y Return</span>
+          ${renderPill(fund.oneYear)}
+        </div>
+        <div class="fund-metric-item">
+          <span class="metric-lbl">3Y CAGR</span>
+          ${renderPill(fund.threeYear)}
+        </div>
+        <div class="fund-metric-item">
+          <span class="metric-lbl">5Y CAGR</span>
+          ${renderPill(fund.fiveYear)}
+        </div>
+      </div>
+      <div class="fund-card-footer">
+        <div class="score-chip">
+          <span class="score-chip-lbl">Model Score</span>
+          <span class="score-chip-val">${formatReturn(score)}</span>
+        </div>
+        <a class="card-chart-btn" href="${chartUrl(fund)}" target="_blank" rel="noopener" aria-label="Open NAV chart for ${escapeHtml(fund.name)}">
+          <span>NAV Chart</span>
+          <i class="fa-solid fa-chart-line" aria-hidden="true"></i>
+        </a>
+      </div>
+    </article>`;
+  });
+
   tableBody.innerHTML = rows.join('');
+  if (fundCardsFeed) {
+    fundCardsFeed.innerHTML = cards.join('');
+  }
   emptyState.hidden = visibleFunds.length !== 0;
   document.getElementById('fund-count').textContent = funds.length;
   const rankedFunds = funds.filter((fund) => Number.isFinite(calculateScore(fund))).sort((a, b) => calculateScore(b) - calculateScore(a));
@@ -104,6 +164,26 @@ function chartUrl(fund) {
   return `chart.html?${params}`;
 }
 
+function readTopFundsCache() {
+  try {
+    const cached = JSON.parse(localStorage.getItem(TOP_FUNDS_CACHE_KEY));
+    if (!cached || !cached.updatedAt || !cached.entries || Date.now() - cached.updatedAt > TOP_FUNDS_CACHE_TTL) return null;
+    return cached;
+  } catch (error) {
+    return null;
+  }
+}
+
+function saveTopFundsCache(entries) {
+  topFundsUpdatedAt = Date.now();
+  topFundMetrics = entries;
+  localStorage.setItem(TOP_FUNDS_CACHE_KEY, JSON.stringify({ updatedAt: topFundsUpdatedAt, entries }));
+}
+
+function formatRefreshTime(timestamp) {
+  return new Date(timestamp).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+}
+
 function renderTopFunds() {
   const categories = ['All', ...new Set(TOP_FUNDS.map((fund) => fund.category))];
   categoryFilters.innerHTML = categories.map((category) => `<button class="category-filter${category === selectedCategory ? ' is-selected' : ''}" type="button" role="tab" aria-selected="${category === selectedCategory}" data-category="${escapeHtml(category)}">${escapeHtml(category)}</button>`).join('');
@@ -112,8 +192,40 @@ function renderTopFunds() {
     <div class="top-fund-card-head"><span class="fund-category-pill">${escapeHtml(fund.category)}</span><span class="horizon"><i class="fa-regular fa-clock" aria-hidden="true"></i> ${fund.horizon}</span></div>
     <h3>${escapeHtml(fund.name)}</h3>
     <p>${escapeHtml(fund.thesis)}</p>
+    ${topFundMetrics[fund.name] ? `<div class="top-fund-live-metrics" aria-label="Live performance metrics">
+      <div><span>1Y</span><strong>${formatReturn(topFundMetrics[fund.name].oneYear)}</strong></div>
+      <div><span>3Y</span><strong>${formatReturn(topFundMetrics[fund.name].threeYear)}</strong></div>
+      <div><span>5Y</span><strong>${formatReturn(topFundMetrics[fund.name].fiveYear)}</strong></div>
+    </div>
+    <div class="top-fund-score"><span>Model score ${formatReturn(topFundMetrics[fund.name].score)}</span><span class="rating" aria-label="${topFundMetrics[fund.name].rating || 0} out of 5 stars">${topFundMetrics[fund.name].rating ? '★'.repeat(topFundMetrics[fund.name].rating) : '—'}</span></div>` : '<p class="top-fund-loading" role="status">Loading daily performance metrics...</p>'}
     <a class="open-chart-link" href="${chartUrl(fund)}" target="_blank" rel="noopener">Open NAV chart <i class="fa-solid fa-arrow-up-right-from-square" aria-hidden="true"></i></a>
   </article>`).join('');
+}
+
+async function refreshTopFunds() {
+  const cached = readTopFundsCache();
+  if (cached) {
+    topFundMetrics = cached.entries;
+    topFundsUpdatedAt = cached.updatedAt;
+    renderTopFunds();
+    topFundsRefreshStatus.textContent = `Daily update from ${formatRefreshTime(topFundsUpdatedAt)}. Refreshes every 24 hours.`;
+    return;
+  }
+
+  renderTopFunds();
+  topFundsRefreshStatus.textContent = 'Loading the latest daily Top Funds release...';
+  try {
+    const response = await fetch(`${TOP_FUNDS_DATA_URL}?t=${Date.now()}`, { cache: 'no-store' });
+    if (!response.ok) throw new Error('The daily release is not available yet.');
+    const payload = await response.json();
+    const entries = Object.fromEntries((payload.funds || []).map((fund) => [fund.name, fund]));
+    if (!Object.keys(entries).length) throw new Error('The daily release did not contain any funds.');
+    saveTopFundsCache(entries);
+    renderTopFunds();
+    topFundsRefreshStatus.textContent = `Updated ${formatRefreshTime(topFundsUpdatedAt)}. Refreshes daily at 7:00 PM IST.`;
+  } catch (error) {
+    topFundsRefreshStatus.textContent = 'Daily release unavailable. Charts remain available with live NAV history.';
+  }
 }
 
 function setView(viewId) {
@@ -162,12 +274,17 @@ function selectScheme(matches, requestedName) {
   })[0];
 }
 
-async function fetchLiveFund(name) {
-  const searchResponse = await fetch(`${MFAPI_BASE}/search?q=${encodeURIComponent(name)}`);
-  if (!searchResponse.ok) throw new Error(`Could not search for "${name}".`);
-  const matches = await searchResponse.json();
-  if (!Array.isArray(matches) || !matches.length) throw new Error(`No Indian mutual-fund scheme matched "${name}".`);
-  const scheme = selectScheme(matches, name);
+async function fetchLiveFund(name, providedSchemeCode = '') {
+  let scheme;
+  if (providedSchemeCode) {
+    scheme = { schemeCode: providedSchemeCode, schemeName: name };
+  } else {
+    const searchResponse = await fetch(`${MFAPI_BASE}/search?q=${encodeURIComponent(name)}`);
+    if (!searchResponse.ok) throw new Error(`Could not search for "${name}".`);
+    const matches = await searchResponse.json();
+    if (!Array.isArray(matches) || !matches.length) throw new Error(`No Indian mutual-fund scheme matched "${name}".`);
+    scheme = selectScheme(matches, name);
+  }
   const historyResponse = await fetch(`${MFAPI_BASE}/${scheme.schemeCode}`);
   if (!historyResponse.ok) throw new Error(`Could not load NAV history for "${scheme.schemeName}".`);
   const payload = await historyResponse.json();
@@ -343,4 +460,4 @@ categoryFilters.addEventListener('click', (event) => {
   renderTopFunds();
 });
 
-renderTopFunds();
+refreshTopFunds();

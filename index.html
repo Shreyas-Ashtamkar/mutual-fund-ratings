@@ -78,7 +78,9 @@
           <input id="fund-filter" type="search" placeholder="Search by name or category">
         </label>
       </div>
-      <div class="table-wrap">
+
+      <!-- Desktop Tabular View (hidden on tablet & mobile) -->
+      <div class="table-wrap desktop-only-table">
         <table>
           <thead>
             <tr>
@@ -93,14 +95,18 @@
           </thead>
           <tbody id="fund-table-body"></tbody>
         </table>
-        <p id="empty-state" class="empty-state" hidden>No funds match this filter.</p>
       </div>
+
+      <!-- Tablet & Mobile Adaptive Cards Feed (deprecates tabular layout on handy devices) -->
+      <div id="fund-cards-feed" class="fund-cards-feed" aria-label="Funds performance list"></div>
+
+      <p id="empty-state" class="empty-state" hidden>No funds match this filter.</p>
       </section>
 
       <button id="download-button" class="download-button" type="button">Download Excel</button>
 
       <footer class="disclaimer">
-      Ratings and Top funds are algorithmic screens based on historical returns and public scheme information, not buy or sell recommendations. Verify fund objectives, risk, costs, and suitability independently before making any investment decision. Past performance does not guarantee future results.
+        <strong>Important Note:</strong> Ranking purely on trailing CAGR without considering downside risk, standard deviation, expense ratios, or fund manager stability encourages users to chase recent market tops (recency bias). Please make decisions based on your own intelligence, due diligence, and financial suitability. This data is always going to be incomplete and is provided solely for historical observation and algorithmic ranking—never as investment advice. Past performance is no guarantee of future returns.
       </footer>
     </section>
     </section>
@@ -110,12 +116,18 @@
         <div>
           <p class="section-kicker">Curated market view</p>
           <h2 id="top-funds-heading">Top funds by category</h2>
-          <p class="muted">A maintained shortlist of established direct-growth schemes. Each chart loads live NAV history; compare funds that fit your own horizon.</p>
+          <p class="muted">A maintained shortlist of established direct-growth schemes. Returns and ratings refresh daily from live NAV history, with results cached for 24 hours.</p>
         </div>
-        <p class="method-note"><i class="fa-solid fa-circle-info" aria-hidden="true"></i> The shortlist is curated, not a live market ranking. Chart NAV data is live from MFAPI. Not advice.</p>
+        <div class="method-note">
+          <p><i class="fa-solid fa-circle-info" aria-hidden="true"></i> The shortlist is curated, not a live market ranking. Chart NAV data is live from MFAPI. Not advice.</p>
+          <p id="top-funds-refresh-status" class="refresh-status" role="status">Preparing daily refresh...</p>
+        </div>
       </header>
       <div id="category-filters" class="category-filters" role="tablist" aria-label="Fund categories"></div>
       <div id="top-funds-grid" class="top-funds-grid"></div>
+      <footer class="disclaimer">
+        <strong>Important Note:</strong> Ranking purely on trailing CAGR without considering downside risk, standard deviation, expense ratios, or fund manager stability encourages users to chase recent market tops (recency bias). Please make decisions based on your own intelligence, due diligence, and financial suitability. This data is always going to be incomplete and is provided solely for historical observation and algorithmic ranking—never as investment advice.
+      </footer>
     </section>
   </main>
   <button id="go-to-inputs-button" class="go-to-inputs-button" type="button" hidden>Go to inputs</button>
